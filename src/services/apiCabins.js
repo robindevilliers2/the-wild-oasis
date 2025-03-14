@@ -1,3 +1,4 @@
+import { omitProperties } from "../utils/helpers";
 import supabase from "./supabase";
 
 export async function getCabins() {
@@ -8,6 +9,24 @@ export async function getCabins() {
     throw new Error("Cabins could not be loaded");
   }
   return data;
+}
+
+export async function createCabin(newCabin) {
+  const { data, error } = await supabase
+    .from("cabins")
+    .insert([
+      {
+        ...omitProperties(newCabin, ["maxCapacity", "regularPrice"]),
+        max_capacity: newCabin.maxCapacity,
+        regular_price: newCabin.regularPrice,
+      },
+    ])
+    .select();
+
+  if (error) {
+    console.error(error);
+    throw new Error("Cabin could not be deleted");
+  }
 }
 
 export async function deleteCabin(id) {

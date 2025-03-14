@@ -27,3 +27,12 @@ export const formatCurrency = (value) =>
   new Intl.NumberFormat("en", { style: "currency", currency: "USD" }).format(
     value
   );
+
+export const omitProperties = (obj, omitKeys) => {
+  return Object.keys(obj).reduce((result, key) => {
+    if (!omitKeys.includes(key)) {
+      result[key] = obj[key];
+    }
+    return result;
+  }, {});
+};
