@@ -8,29 +8,50 @@ export async function getCabins() {
     console.error(error);
     throw new Error("Cabins could not be loaded");
   }
-  return data;
+  return data.map((cabin) => ({
+    ...omitProperties(cabin, ["max_capacity", "regular_price"]),
+    maxCapacity: cabin.max_capacity,
+    regularPrice: cabin.regular_price,
+  }));
 }
 
-export async function createCabin(newCabin) {
+export async function createEditCabin(newCabin, id) {
+  const hasImagePath = newCabin.image?.startsWith?.(supabaseUrl);
   const imageName = `${Math.random()}-${newCabin.image.name}`.replace("/", "");
-  const imagePath = `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
+  const imagePath = hasImagePath
+    ? newCabin.image
+    : `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
 
-  //1. Create cabin
-  const { data, error } = await supabase
-    .from("cabins")
-    .insert([
+  //1. Create/Edit cabin
+  let query = supabase.from("cabins");
+
+  //A) CREATE
+  if (!id)
+    query = query.insert([
       {
         ...omitProperties(newCabin, ["maxCapacity", "regularPrice"]),
         max_capacity: newCabin.maxCapacity,
         regular_price: newCabin.regularPrice,
         image: imagePath,
       },
-    ])
-    .select();
+    ]);
+
+  //B) Edit
+  if (id)
+    query = query
+      .update({
+        ...omitProperties(newCabin, ["maxCapacity", "regularPrice"]),
+        max_capacity: newCabin.maxCapacity,
+        regular_price: newCabin.regularPrice,
+        image: imagePath,
+      })
+      .eq("id", id);
+
+  const { data, error } = await query.select().single();
 
   if (error) {
     console.error(error);
-    throw new Error("Cabin could not be deleted");
+    throw new Error("Cabin could not be updated");
   }
 
   //2. upload image
