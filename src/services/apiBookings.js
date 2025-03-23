@@ -1,5 +1,20 @@
-import { getToday } from "../utils/helpers";
+import { getToday, omitProperties } from "../utils/helpers";
 import supabase from "./supabase";
+
+export async function getBookings() {
+  const { data, error } = await supabase
+    .from("bookings")
+    .select(
+      "id,created_at,start_date,end_date,num_nights,num_guests,status,total_price, cabins(name) , guests(full_name,email)"
+    );
+
+  if (error) {
+    console.error(error);
+    throw new Error("Unable to fetch bookings");
+  }
+
+  return data.map(mapToLocalObject);
+}
 
 export async function getBooking(id) {
   const { data, error } = await supabase
@@ -13,7 +28,7 @@ export async function getBooking(id) {
     throw new Error("Booking not found");
   }
 
-  return data;
+  return mapToLocalObject(data);
 }
 
 // Returns all BOOKINGS that are were created after the given date. Useful to get bookings created in the last 30 days, for example.
@@ -29,7 +44,7 @@ export async function getBookingsAfterDate(date) {
     throw new Error("Bookings could not get loaded");
   }
 
-  return data;
+  return mapToLocalObject(data);
 }
 
 // Returns all STAYS that are were created after the given date
@@ -46,7 +61,7 @@ export async function getStaysAfterDate(date) {
     throw new Error("Bookings could not get loaded");
   }
 
-  return data;
+  return mapToLocalObject(data);
 }
 
 // Activity means that there is a check in or a check out today
@@ -82,7 +97,7 @@ export async function updateBooking(id, obj) {
     console.error(error);
     throw new Error("Booking could not be updated");
   }
-  return data;
+  return mapToLocalObject(data);
 }
 
 export async function deleteBooking(id) {
@@ -93,5 +108,30 @@ export async function deleteBooking(id) {
     console.error(error);
     throw new Error("Booking could not be deleted");
   }
-  return data;
+  return mapToLocalObject(data);
+}
+
+function mapToLocalObject(booking) {
+  return {
+    ...omitProperties(booking, [
+      "start_date",
+      "end_date",
+      "num_nights",
+      "num_guests",
+      "cabin_price",
+      "extras_price",
+      "total_price",
+      "has_breakfast",
+      "is_paid",
+    ]),
+    startDate: booking.start_date,
+    endDate: booking.end_date,
+    numNights: booking.num_nights,
+    numGuests: booking.num_guests,
+    cabinPrice: booking.cabin_price,
+    extrasPrices: booking.extras_price,
+    totalPrice: booking.total_price,
+    hasBreakfast: booking.has_breakfast,
+    isPaid: booking.is_paid,
+  };
 }
