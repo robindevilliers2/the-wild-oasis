@@ -54,7 +54,7 @@ export async function getBooking(id) {
 export async function getBookingsAfterDate(date) {
   const { data, error } = await supabase
     .from("bookings")
-    .select("created_at, totalPrice, extrasPrice")
+    .select("created_at, total_price, extras_price")
     .gte("created_at", date)
     .lte("created_at", getToday({ end: true }));
 
@@ -71,9 +71,9 @@ export async function getStaysAfterDate(date) {
   const { data, error } = await supabase
     .from("bookings")
     // .select('*')
-    .select("*, guests(fullName)")
-    .gte("startDate", date)
-    .lte("startDate", getToday());
+    .select("*, guests(full_name)")
+    .gte("start_date", date)
+    .lte("start_date", getToday());
 
   if (error) {
     console.error(error);
@@ -87,9 +87,9 @@ export async function getStaysAfterDate(date) {
 export async function getStaysTodayActivity() {
   const { data, error } = await supabase
     .from("bookings")
-    .select("*, guests(fullName, nationality, countryFlag)")
+    .select("*, guests(full_name, nationality, country_flag)")
     .or(
-      `and(status.eq.unconfirmed,startDate.eq.${getToday()}),and(status.eq.checked-in,endDate.eq.${getToday()})`
+      `and(status.eq.unconfirmed,start_date.eq.${getToday()}),and(status.eq.checked-in,end_date.eq.${getToday()})`
     )
     .order("created_at");
 
@@ -130,6 +130,22 @@ export async function deleteBooking(id) {
   return mapToLocalObject(data);
 }
 
+function mapToLocalGuestsObject(guest) {
+  return {
+    ...omitProperties(guest, ["national_id", "full_name", "country_flag"]),
+    fullName: guest.fullName,
+    countryFlag: guest.country_flag,
+    nationalID: guest.national_id,
+  };
+}
+
+function mapToLocalCabinsObject(cabin) {
+  return {
+    ...omitProperties(cabin, ["max_xapacity", "regular_price"]),
+    maxCapacity: cabin.max_capacity,
+    regularPrice: cabin.regular_price,
+  };
+}
 function mapToLocalObject(booking) {
   return {
     ...omitProperties(booking, [
@@ -148,9 +164,11 @@ function mapToLocalObject(booking) {
     numNights: booking.num_nights,
     numGuests: booking.num_guests,
     cabinPrice: booking.cabin_price,
-    extrasPrices: booking.extras_price,
+    extrasPrice: booking.extras_price,
     totalPrice: booking.total_price,
     hasBreakfast: booking.has_breakfast,
     isPaid: booking.is_paid,
+    cabins: mapToLocalCabinsObject(booking.cabins),
+    guests: mapToLocalGuestsObject(booking.guests),
   };
 }
