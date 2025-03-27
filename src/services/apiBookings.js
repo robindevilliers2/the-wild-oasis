@@ -131,6 +131,7 @@ export async function deleteBooking(id) {
 }
 
 function mapToLocalGuestsObject(guest) {
+  if (!guest) return;
   return {
     ...omitProperties(guest, ["national_id", "full_name", "country_flag"]),
     fullName: guest.fullName,
@@ -140,6 +141,7 @@ function mapToLocalGuestsObject(guest) {
 }
 
 function mapToLocalCabinsObject(cabin) {
+  if (!cabin) return;
   return {
     ...omitProperties(cabin, ["max_xapacity", "regular_price"]),
     maxCapacity: cabin.max_capacity,
