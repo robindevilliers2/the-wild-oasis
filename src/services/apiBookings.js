@@ -134,7 +134,7 @@ function mapToLocalGuestsObject(guest) {
   if (!guest) return;
   return {
     ...omitProperties(guest, ["national_id", "full_name", "country_flag"]),
-    fullName: guest.fullName,
+    fullName: guest.full_name,
     countryFlag: guest.country_flag,
     nationalID: guest.national_id,
   };
