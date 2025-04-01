@@ -149,6 +149,7 @@ function mapToLocalCabinsObject(cabin) {
   };
 }
 function mapToLocalObject(booking) {
+  if (!booking) return;
   return {
     ...omitProperties(booking, [
       "start_date",
