@@ -51,6 +51,7 @@ export async function getBooking(id) {
 }
 
 // Returns all BOOKINGS that are were created after the given date. Useful to get bookings created in the last 30 days, for example.
+//date : ISO string
 export async function getBookingsAfterDate(date) {
   const { data, error } = await supabase
     .from("bookings")
@@ -63,14 +64,13 @@ export async function getBookingsAfterDate(date) {
     throw new Error("Bookings could not get loaded");
   }
 
-  return mapToLocalObject(data);
+  return data.map(mapToLocalObject);
 }
 
 // Returns all STAYS that are were created after the given date
 export async function getStaysAfterDate(date) {
   const { data, error } = await supabase
     .from("bookings")
-    // .select('*')
     .select("*, guests(full_name)")
     .gte("start_date", date)
     .lte("start_date", getToday());
@@ -80,7 +80,7 @@ export async function getStaysAfterDate(date) {
     throw new Error("Bookings could not get loaded");
   }
 
-  return mapToLocalObject(data);
+  return data.map(mapToLocalObject);
 }
 
 // Activity means that there is a check in or a check out today
@@ -101,7 +101,7 @@ export async function getStaysTodayActivity() {
     console.error(error);
     throw new Error("Bookings could not get loaded");
   }
-  return data;
+  return data.map(mapToLocalObject);
 }
 
 export async function updateBooking(id, obj) {
@@ -150,6 +150,7 @@ function mapToLocalCabinsObject(cabin) {
 }
 function mapToLocalObject(booking) {
   if (!booking) return;
+
   return {
     ...omitProperties(booking, [
       "start_date",
